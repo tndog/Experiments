@@ -191,7 +191,7 @@
     function undoMove() {
         if (history.length > 0) {
             board = history.pop();
-            moves--;
+            //moves--;
             statusEl.innerText = "";
             gameActive = true;
             render();
