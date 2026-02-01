@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Switch 10 - Responsive</title>
+    <title>Switch 10 - Final</title>
     <style>
         :root {
             --wood: #5d4037;
@@ -12,128 +12,64 @@
             --yellow-peg: radial-gradient(circle at 30% 30%, #fff176, #fbc02d);
         }
 
-        /* Prevent scrolling and bounce on mobile */
+        /* Essential Layout - No Scroll */
         html, body { 
-            height: 100%; 
-            margin: 0; 
-            padding: 0; 
-            overflow: hidden; 
-            touch-action: manipulation;
+            height: 100%; width: 100%; margin: 0; padding: 0; 
+            overflow: hidden; touch-action: manipulation;
+            background: #e0e0e0; font-family: sans-serif;
         }
 
         body {
-            font-family: system-ui, -apple-system, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            background: #e0e0e0;
-            color: #333;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
         }
 
-        h1 { 
-            margin: 0.5rem 0; 
-            font-size: 1.5rem; 
-            color: #3e2723;
-        }
+        h1 { margin: 5px 0; font-size: 1.4rem; color: #3e2723; }
 
-        .stats {
-            margin: 0.5rem 0;
-            font-size: 1rem;
-            display: flex;
-            gap: 20px;
-            font-weight: bold;
-        }
+        .stats { display: flex; gap: 20px; font-weight: bold; margin-bottom: 5px; }
 
-        /* The Board Scaling */
         #game-board {
-            display: flex;
-            gap: 4px;
-            padding: 12px;
-            background: var(--wood);
-            border-radius: 10px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.4);
-            border: 3px solid #3e2723;
-            max-width: 95vw; /* Never wider than screen */
+            display: flex; gap: 5px; padding: 15px;
+            background: var(--wood); border-radius: 12px;
+            border: 4px solid #3e2723; box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+            max-width: 95vw;
         }
 
         .hole {
-            /* Use vmin to scale based on the smaller screen dimension */
-            width: 8vmin;
-            height: 8vmin;
-            max-width: 50px;
-            max-height: 50px;
-            border-radius: 50%;
-            background: var(--hole-bg);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
+            width: 8.2vmin; height: 8.2vmin; max-width: 55px; max-height: 55px;
+            border-radius: 50%; background: var(--hole-bg);
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: inset 0 3px 5px rgba(0,0,0,0.6);
         }
 
         .peg {
-            width: 80%;
-            height: 80%;
-            border-radius: 50%;
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            width: 85%; height: 85%; border-radius: 50%;
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
-        .green { background: var(--green-peg); box-shadow: 0 2px #1b5e20; }
-        .yellow { background: var(--yellow-peg); box-shadow: 0 2px #f57f17; }
+        .green { background: var(--green-peg); box-shadow: 0 3px #1b5e20; }
+        .yellow { background: var(--yellow-peg); box-shadow: 0 3px #f57f17; }
 
-        .controls { 
-            display: flex; 
-            gap: 10px; 
-            margin: 0.5rem 0; 
-        }
-
+        .controls { display: flex; gap: 10px; margin-top: 10px; }
+        
         button {
-            padding: 10px 18px;
-            font-size: 0.9rem;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            background: #3e2723;
-            color: white;
-            box-shadow: 0 3px #221512;
+            padding: 10px 20px; border: none; border-radius: 6px;
+            background: #3e2723; color: white; cursor: pointer;
+            font-weight: bold; box-shadow: 0 3px #221512;
         }
 
-        #status {
-            font-size: 0.9rem;
-            font-weight: bold;
-            min-height: 1.2rem;
-            margin-bottom: 0.5rem;
-            text-align: center;
-        }
+        #status { margin: 10px 0; font-weight: bold; min-height: 1.2em; text-align: center; }
 
-        /* Modal Layout for Small Screens */
+        /* Modal - Ensures it sits on top */
         #modal-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 100;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); display: flex;
+            justify-content: center; align-items: center; z-index: 1000;
         }
 
         .modal {
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            width: 85%;
-            max-width: 400px;
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-
-        /* Landscape specific tweaks */
-        @media (orientation: landscape) and (max-height: 500px) {
-            h1 { font-size: 1.2rem; margin: 0.2rem; }
-            .stats { margin: 0.2rem; }
-            #game-board { padding: 8px; }
-            .hole { width: 12vmin; height: 12vmin; } /* Slightly larger in landscape */
+            background: white; padding: 25px; border-radius: 15px;
+            width: 80%; max-width: 350px; text-align: center;
         }
 
         @keyframes bounce {
@@ -141,20 +77,28 @@
             50% { transform: translateY(-15px); }
         }
         .winner { animation: bounce 0.5s ease infinite; }
+
+        /* Landscape fix for small phones */
+        @media (orientation: landscape) and (max-height: 450px) {
+            h1 { display: none; }
+            .stats { font-size: 0.9rem; }
+            #game-board { padding: 8px; }
+        }
     </style>
 </head>
 <body>
 
     <div id="modal-overlay">
         <div class="modal">
-            <h3>How to Play</h3>
-            <p>Swap sides! Green right, Yellow left.</p>
-            <ul style="font-size: 0.85rem;">
-                <li>Step into adjacent empty hole.</li>
-                <li>Jump over 1 opposing peg.</li>
-                <li>No backward moves!</li>
-            </ul>
-            <button style="width:100%" onclick="closeModal()">Start</button>
+            <h2>How to Play</h2>
+            <p>Swap the colors!</p>
+            <p style="font-size: 0.9rem; text-align: left;">
+                • Green moves Right, Yellow moves Left.<br>
+                • Step into an empty hole.<br>
+                • Jump over 1 opposite peg.<br>
+                • No moving backwards!
+            </p>
+            <button style="width:100%" onclick="closeModal()">Start Playing</button>
         </div>
     </div>
 
@@ -166,118 +110,119 @@
     </div>
 
     <div id="game-board"></div>
+    
     <div id="status"></div>
 
     <div class="controls">
         <button id="undo-btn" onclick="undoMove()">Undo</button>
         <button onclick="resetGame()">Reset</button>
-        <button onclick="showModal()">Help</button>
     </div>
 
-    <script>
-        let board = ['G', 'G', 'G', 'G', 'G', 'E', 'Y', 'Y', 'Y', 'Y', 'Y'];
-        let history = [];
-        let moves = 0;
-        let gameActive = true;
+<script>
+    let board = ['G', 'G', 'G', 'G', 'G', 'E', 'Y', 'Y', 'Y', 'Y', 'Y'];
+    let history = [];
+    let moves = 0;
+    let gameActive = true;
 
-        const boardEl = document.getElementById('game-board');
-        const statusEl = document.getElementById('status');
-        const moveEl = document.getElementById('move-count');
-        const bestEl = document.getElementById('best-score');
-        const undoBtn = document.getElementById('undo-btn');
-        const modal = document.getElementById('modal-overlay');
+    const boardEl = document.getElementById('game-board');
+    const statusEl = document.getElementById('status');
+    const moveEl = document.getElementById('move-count');
+    const bestEl = document.getElementById('best-score');
+    const undoBtn = document.getElementById('undo-btn');
 
-        function showModal() { modal.style.display = 'flex'; }
-        function closeModal() { modal.style.display = 'none'; }
+    function closeModal() {
+        document.getElementById('modal-overlay').style.display = 'none';
+    }
 
-        function render() {
-            boardEl.innerHTML = '';
-            moveEl.innerText = moves;
-            const savedBest = localStorage.getItem('switch10_best');
-            bestEl.innerText = savedBest ? savedBest : '-';
-            undoBtn.disabled = history.length === 0 || !gameActive;
+    function render() {
+        boardEl.innerHTML = '';
+        moveEl.innerText = moves;
+        const savedBest = localStorage.getItem('switch10_best');
+        bestEl.innerText = savedBest ? savedBest : '-';
+        undoBtn.disabled = (history.length === 0 || !gameActive);
 
-            board.forEach((cell, index) => {
-                const hole = document.createElement('div');
-                hole.className = 'hole';
-                if (cell !== 'E') {
-                    const peg = document.createElement('div');
-                    peg.className = `peg ${cell === 'G' ? 'green' : 'yellow'}`;
-                    hole.appendChild(peg);
-                    if (gameActive) hole.onclick = () => tryMove(index);
-                }
-                boardEl.appendChild(hole);
-            });
-
-            if (gameActive && !checkWin() && !canAnyoneMove()) {
-                statusEl.innerText = "Stalemate!";
-                statusEl.style.color = "#d32f2f";
+        board.forEach((cell, index) => {
+            const hole = document.createElement('div');
+            hole.className = 'hole';
+            if (cell !== 'E') {
+                const peg = document.createElement('div');
+                peg.className = `peg ${cell === 'G' ? 'green' : 'yellow'}`;
+                hole.appendChild(peg);
+                if (gameActive) hole.onclick = () => tryMove(index);
             }
+            boardEl.appendChild(hole);
+        });
+
+        if (gameActive && !checkWin() && !canAnyoneMove()) {
+            statusEl.innerText = "Stalemate! No moves left.";
+            statusEl.style.color = "#d32f2f";
         }
+    }
 
-        function tryMove(idx) {
-            const type = board[idx];
-            const dir = type === 'G' ? 1 : -1;
-            let targetIdx = null;
+    function tryMove(idx) {
+        if (!gameActive) return;
+        const type = board[idx];
+        const dir = type === 'G' ? 1 : -1;
+        
+        let targetIdx = null;
+        if (board[idx + dir] === 'E') targetIdx = idx + dir;
+        else if (board[idx + (dir * 2)] === 'E') targetIdx = idx + (dir * 2);
 
-            if (board[idx + dir] === 'E') targetIdx = idx + dir;
-            else if (board[idx + (dir * 2)] === 'E') targetIdx = idx + (dir * 2);
-
-            if (targetIdx !== null) {
-                history.push([...board]);
-                moves++;
-                const temp = board[idx];
-                board[idx] = board[targetIdx];
-                board[targetIdx] = temp;
-                statusEl.innerText = "";
-                render();
-            }
-        }
-
-        function canAnyoneMove() {
-            return board.some((cell, idx) => {
-                if (cell === 'E') return false;
-                const dir = cell === 'G' ? 1 : -1;
-                return (board[idx + dir] === 'E' || (idx + dir * 2 >= 0 && idx + dir * 2 < 11 && board[idx + (dir * 2)] === 'E'));
-            });
-        }
-
-        function undoMove() {
-            if (history.length > 0) {
-                board = history.pop();
-                moves--;
-                statusEl.innerText = "";
-                gameActive = true;
-                render();
-            }
-        }
-
-        function checkWin() {
-            const isWin = board.join('') === 'YYYYYEGGGGG';
-            if (isWin) {
-                gameActive = false;
-                statusEl.innerText = "🎉 Solved!";
-                statusEl.style.color = "#2e7d32";
-                const currentBest = localStorage.getItem('switch10_best');
-                if (!currentBest || moves < parseInt(currentBest)) {
-                    localStorage.setItem('switch10_best', moves);
-                }
-                document.querySelectorAll('.peg').forEach((p, i) => {
-                    setTimeout(() => p.classList.add('winner'), i * 50);
-                });
-                return true;
-            }
-            return false;
-        }
-
-        function resetGame() {
-            board = ['G', 'G', 'G', 'G', 'G', 'E', 'Y', 'Y', 'Y', 'Y', 'Y'];
-            history = []; moves = 0; gameActive = true;
+        if (targetIdx !== null && targetIdx >= 0 && targetIdx < 11) {
+            history.push([...board]);
+            moves++;
+            [board[idx], board[targetIdx]] = [board[targetIdx], board[idx]];
             statusEl.innerText = "";
             render();
         }
+    }
 
+    function canAnyoneMove() {
+        return board.some((cell, idx) => {
+            if (cell === 'E') return false;
+            const dir = cell === 'G' ? 1 : -1;
+            const s = idx + dir;
+            const j = idx + (dir * 2);
+            return (s >= 0 && s < 11 && board[s] === 'E') || 
+                   (j >= 0 && j < 11 && board[j] === 'E');
+        });
+    }
+
+    function undoMove() {
+        if (history.length > 0) {
+            board = history.pop();
+            moves--;
+            statusEl.innerText = "";
+            gameActive = true;
+            render();
+        }
+    }
+
+    function checkWin() {
+        if (board.join('') === 'YYYYYEGGGGG') {
+            gameActive = false;
+            statusEl.innerText = "🎉 Solved!";
+            statusEl.style.color = "#2e7d32";
+            const currentBest = localStorage.getItem('switch10_best');
+            if (!currentBest || moves < parseInt(currentBest)) {
+                localStorage.setItem('switch10_best', moves);
+            }
+            document.querySelectorAll('.peg').forEach((p, i) => {
+                setTimeout(() => p.classList.add('winner'), i * 50);
+            });
+            return true;
+        }
+        return false;
+    }
+
+    function resetGame() {
+        board = ['G', 'G', 'G', 'G', 'G', 'E', 'Y', 'Y', 'Y', 'Y', 'Y'];
+        history = []; moves = 0; gameActive = true;
+        statusEl.innerText = "";
         render();
-    </script>
+    }
+
+    render();
+</script>
 </body>
 </html>
