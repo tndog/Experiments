@@ -1,0 +1,825 @@
+
+
+<!DOCTYPE html>
+<html>
+  <head>
+  	<meta charset="UTF-8">
+	<link href='http://fonts.googleapis.com/css?family=Oswald:700' rel='stylesheet' type='text/css'>
+    <title>tnd[Maps]</title>
+    <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false&libraries=places"></script>
+	<script src="jquery.js"></script>
+	<script src="bootstrap/js/bootstrap.min.js"></script>
+	<script src="modernizr.js"></script>
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<!-- Bootstrap -->
+	<link href="bootstrap/css/bootstrap.min.css" rel="stylesheet" media="screen">
+	<style>
+      
+	<!-- html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      } -->
+	
+	
+	html, body {
+	font: 90%/150% Arial, Helvetica, sans-serif;
+	color: #666;
+	<!--width: 700px; -->
+	width: 70%;
+	margin: 30px auto;
+	}
+	a {
+		color: #000;
+		text-decoration: none;
+	}
+	a:hover {
+		color: #F60;
+	}
+	p {
+		margin: 0 0 2em;
+		
+	}
+	#introP {
+		//font-weight: bold;
+		font-size: 1.333em;
+		color: rgb (118,134,150);
+		letter-spacing: -0.5px;
+		line-height: 1.22em !important;
+		margin-bottom: 17px;
+		margin-left: 1%;
+		width: 50%;
+		white-space:nowrap;
+	}
+	
+	h1, h2, h3 {
+		line-height: 110%;
+	}
+	h1 {
+		font-family: 'Oswald', Arial, sans-serif;
+		height: 55px;
+		//text-transform: uppercase;
+		margin: 0 0 2px;
+		margin-left: 1%;
+		color: rgb(0, 0, 0);
+		text-align: left;
+		font-weight: bold;
+		
+	}
+	h2 {
+		font-family: 'Oswald', Arial, sans-serif;
+		height: 90%;
+		text-transform: uppercase;
+		color: #0;
+		margin: 0 0 8px;
+		font-weight: bold;
+	}
+	h3 {
+		border-top: solid 2px #ccc;
+		margin: 40px 0 15px;
+		padding-top: 10px;
+	}
+	.credits {
+		color: #999;
+		font: italic 90% Arial, Helvetica, sans-serif;
+	}
+	.credits a {
+		color: #666;
+	}
+
+	form p {
+		margin: 0 0 15px;
+	}
+	  
+	 
+      #map-canvas {
+        height: 100%;
+        width: 49%;
+		margin-left: 1%;
+      }
+      #content-pane {
+        float:right;
+		width:47%;
+        padding-left: 2%;
+		padding-right:1%;
+      }
+      #outputDiv {
+        font-size: 12px;
+
+      }
+
+	  
+	 /* table styles */
+	
+	.tableOut {
+		font-size: 0.95em;
+		font-weight: bold;
+		
+	}
+	  
+	
+	.btn-out{
+			border-bottom-width: 0;
+			border-top-width: 0;
+			border-left-width: 0;
+			border-right-width: 0;
+			
+	}
+	
+	<!--button {
+	   border-top: 0px solid #96d1f8;
+	   background: #ffffff;
+	  
+	   padding: 6.5px 13px;
+	   -webkit-border-radius: 0px;
+	   -moz-border-radius: 0px;
+	   border-radius: 0px;
+	   -webkit-box-shadow: rgba(0,0,0,0) 0 0px 0;
+	   -moz-box-shadow: rgba(0,0,0,0) 0 0px 0;
+	   box-shadow: rgba(0,0,0,0) 0 0px 0;
+	   text-shadow: rgba(0,0,0,0) 0 0px 0;
+	   color: #000000;
+	   font-size: 12px;
+	   font-family: Helvetica, Arial, Sans-Serif;
+	   text-decoration: none;
+	   vertical-align: middle;
+	   }
+	button:hover {
+	   border-top-color: #88ccf0;
+	   background: #88ccf0;
+	   color: #000000;
+	   }
+	button:active {
+	   border-top-color: #1b435e;
+	   background: #1b435e;
+	   }
+	-->
+	
+	button {
+		background: #f4f4f4;
+		border: solid 1px #a3a3a3;
+		padding: 1px 1px;
+		/* font: 15px Arial, Helvetica, sans-serif; */
+		font-size: 90%;
+		text-align: left;
+		font:
+		-webkit-box-shadow: inset 0 2px 3px rgba(0,0,0,.1);
+		-moz-box-shadow: inset 0 2px 3px rgba(0,0,0,.1);
+		box-shadow: inset 0 2px 3px rgba(0,0,0,.1);
+		-webkit-border-radius: 3px;
+		-moz-border-radius: 3px;
+		border-radius: 3px;
+		-webkit-appearance: none; /* reset webkit search style */
+	}
+	
+	button:hover {
+		background: #fff;
+		//border-color: #333;
+		border-color: rgb(0,0,255);
+		outline: none; /* remove outline */
+	   }
+	   
+	/***********
+	FORM STYLES 
+	***********/
+
+	/* input styles */
+	input, 
+	textarea, 
+	input[type=search] {
+		background: #f4f4f4;
+		border: solid 1px #a3a3a3;
+		padding: 5px 10px;
+		/* font: 15px Arial, Helvetica, sans-serif; */
+		font:
+		-webkit-box-shadow: inset 0 2px 3px rgba(0,0,0,.1);
+		-moz-box-shadow: inset 0 2px 3px rgba(0,0,0,.1);
+		box-shadow: inset 0 2px 3px rgba(0,0,0,.1);
+		-webkit-border-radius: 5px;
+		-moz-border-radius: 5px;
+		border-radius: 5px;
+		-webkit-appearance: none; /* reset webkit search style */
+	}
+
+	/* input:focus styles */
+	input[type=text]:focus, 
+	textarea:focus,
+	input[type=search]:focus {
+		background: #fff;
+		border-color: #333;
+		outline: none; /* remove outline */
+	}
+
+	input[type=text]:hover, 
+	textarea:hover,
+	input[type=search]:hover {
+		background: #fff;
+		border-color: rgb(0,0,255);
+		outline: none; /* remove outline */
+	} 
+
+	input.notfound {
+			border: 2px solid  rgba(255, 0, 0, 0.4);
+		  }
+
+	/* set field width */
+	input[type=text], input[type="search"] {
+		width: 400px;
+	}
+	textarea {
+		width: 400px;
+		height: 250px;
+	}
+
+	/* fallback placeholder */
+	.placeholder {
+		color: #bbb;
+	}
+	/* webkit placeholder */
+	::-webkit-input-placeholder {
+		color: #bbb;
+	}
+	/* moz placeholder */
+	:-moz-placeholder {
+		color: #bbb;
+	}
+
+	/* remove webkit search input decoration and cancel button */
+	input[type="search"]::-webkit-search-decoration, 
+	input[type="search"]::-webkit-search-cancel-button {
+		display: none;
+	}
+	
+	
+/** Radio button styling to look like toggle **/
+	
+input[type="radio"].toggle {
+    display: none;
+}
+
+input[type="radio"].toggle:checked + label {
+    background-image: -moz-linear-gradient(bottom,#969696,#727272);
+    background-image: -webkit-gradient(linear,0 0,0 100%,from(#969696),#727272);
+    background-image: -webkit-linear-gradient(bottom,#969696,#727272);
+    background-image: -o-linear-gradient(bottom,#969696,#727272);
+    background-image: linear-gradient(to top,#969696,#727272);
+    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ff969696',endColorstr='#ff727272',GradientType=0);
+    filter: progid:DXImageTransform.Microsoft.gradient(enabled=false);
+    -webkit-box-shadow: inset 0 1px 6px rgba(41, 41, 41, 0.2),0 1px 2px rgba(0,0,0,0.05);
+    -moz-box-shadow: inset 0 1px 6px 0 rgba(41, 41, 41, 0.2),0 1px 2px rgba(0,0,0,0.05);
+    box-shadow: inset 0 1px 6px rgba(41, 41, 41, 0.2),0 1px 2px rgba(0, 0, 0, 0.05);
+    cursor: default;
+    color: #E6E6E6;
+    border-color: transparent;
+    text-shadow: 0 1px 1px rgba(40, 40, 40, 0.75);
+}
+
+input[type="radio"].toggle + label {
+    width: 3em;
+}
+
+input[type="radio"].toggle:checked + label.btn:hover {
+    background-color: inherit;
+    background-position: 0 0;
+    -webkit-transition: none;
+    -moz-transition: none;
+    transition: none;
+}
+
+input[type="radio"].toggle-left + label {
+    
+    -webkit-border-top-right-radius: 3px;
+    -webkit-border-bottom-right-radius: 3px;
+    -moz-border-top-right-radius: 3px;
+    -moz-border-bottom-right-radius: 3px;
+    border-top-right-radius: 3px;
+    border-bottom-right-radius: 3px;
+}
+
+input[type="radio"].toggle-right + label {
+    -webkit-border-top-left-radius: 3px;
+    -webkit-border-bottom-left-radius: 3px;
+    -moz-border-top-left-radius: 3px;
+    -moz-border-bottom-left-radius: 3px;
+    border-top-left-radius: 3px;
+    border-bottom-left-radius: 3px;
+}
+
+
+    </style>
+    <script>
+//enable the new look google maps
+google.maps.visualRefresh = true;
+var map;
+var geocoder;
+var bounds = new google.maps.LatLngBounds();
+var markersArray = [];
+var directionsDisplay;
+var directionsService;
+//custom styled map option
+var MY_MAPTYPE_ID = 'custom_style';
+
+var bikeLayer;
+var origins = [];
+var destinations = [];
+
+var input1;
+var autocomplete1;
+var input2;
+var autocomplete2;
+var input3;
+var autocomplete3;
+var input4;
+var autocomplete4;
+
+var markerZIndex;  // not yet in use, was causing display issues on map.
+
+var destinationIcon = 'https://chart.googleapis.com/chart?chst=d_map_pin_letter&chld=D|FF0000|000000';
+var originIcon = 'https://chart.googleapis.com/chart?chst=d_map_pin_letter&chld=O|FFFF00|000000';
+
+function initialize() {
+   var mapOptions = {
+		center: new google.maps.LatLng(-33.8688, 151.2195),
+        zoom: 13,
+        mapTypeControlOptions: {
+			mapTypeIds: [google.maps.MapTypeId.ROADMAP, MY_MAPTYPE_ID]
+			},
+        mapTypeId: google.maps.MapTypeId.ROADMAP
+		};
+    map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
+	var styledMapOptions = {
+		name: 'Custom Style'
+		};
+	//custom map options
+	var featureOpts = [
+    {
+      stylers: [
+        { hue: '#890000' },
+        { visibility: 'simplified' },
+        { gamma: 0.5 },
+        { weight: 0.5 }
+      ]
+    },
+    {
+      elementType: 'labels',
+      stylers: [
+        { visibility: 'off' }
+      ]
+    },
+    {
+      featureType: 'water',
+      stylers: [
+        { color: '#890000' }
+      ]
+    }
+  ];
+  //end custom map options
+	var customMapType = new google.maps.StyledMapType(featureOpts, styledMapOptions);
+
+	map.mapTypes.set(MY_MAPTYPE_ID, customMapType);
+
+	
+		
+	geocoder = new google.maps.Geocoder();
+	directionsService = new google.maps.DirectionsService();
+	// Create a renderer for directions and bind it to the map.
+	var rendererOptions = {
+    map: map
+	}
+	directionsDisplay = new google.maps.DirectionsRenderer(rendererOptions);
+	//directionsDisplay.setMap(map);
+
+	//initialise the bike layer but don't turn it on.
+	bikeLayer = new google.maps.BicyclingLayer();
+
+	
+	//initialise the text input fields. We start with 4.
+	
+	
+	input1 = document.getElementById('searchTextField1');
+    autocomplete1 = new google.maps.places.Autocomplete(input1);
+	//input1.value = "Miller Street, North Sydney, New South Wales, Australia";
+		
+	input2 = document.getElementById('searchTextField2');
+    autocomplete2= new google.maps.places.Autocomplete(input2);
+	//input2.value = "Pacific Highway, St Leonards, New South Wales, Australia";
+		
+	input3 = document.getElementById('searchTextField3');
+    autocomplete3 = new google.maps.places.Autocomplete(input3);
+	//input3.value = "High St, Manly, New South Wales, Australia";
+		
+	input4 = document.getElementById('searchTextField4');
+    autocomplete4 = new google.maps.places.Autocomplete(input4);
+	//input4.value = "Addison Rd, Manly, New South Wales, Australia";
+	
+	
+}
+
+function calculateDistances() {
+  
+  deleteOverlays();
+  var service = new google.maps.DistanceMatrixService();
+  
+   origins = [input1.value, input2.value, input3.value, input4.value];
+   destinations = [input1.value, input2.value, input3.value, input4.value];
+   
+  service.getDistanceMatrix(
+ /**  
+	{
+      origins: [origin1, origin2],
+      destinations: [destinationA, destinationB],
+      travelMode: google.maps.TravelMode.DRIVING,
+      unitSystem: google.maps.UnitSystem.METRIC,
+      avoidHighways: false,
+      avoidTolls: false
+    }, callback);
+**/	
+	//we send all of the inputs as both origins and destinations as it only requires one call to the server.
+	{
+      //origins: [input1.value, input2.value, input3.value, input4.value],
+	  origins: origins,
+	  //origins: [input1.value],
+      //destinations: [input1.value, input2.value, input3.value, input4.value],
+	  destinations: destinations,
+      travelMode: google.maps.TravelMode.DRIVING,
+      unitSystem: google.maps.UnitSystem.METRIC,
+      avoidHighways: false,
+      avoidTolls: false
+    }, callback);
+	
+	//display directions on the map
+	//calcRoute();
+}
+
+function callback(response, status) {
+  if (status != google.maps.DistanceMatrixStatus.OK) {
+    alert('Error was: ' + status);
+  } 
+  else {
+    var origins = response.originAddresses;
+	console.log("Origins: ");
+	console.log(origins);
+	var destinations = response.destinationAddresses;
+	console.log("Destinations: ");
+	console.log(destinations);
+  
+	//delete map overlays
+    deleteOverlays();
+	 //clear out the old table (if CalculateDistances has alredy been pushed)
+	var outputDiv = document.getElementById('outputDiv');
+	outputDiv.innerHTML = '';
+	var myTableDiv = document.getElementById("myDynamicTable");
+    myTableDiv.innerHTML = '';  
+    //create new table of distances to be inserted
+	var table = document.createElement('TABLE');
+    table.border='1';
+    
+    var tableBody = document.createElement('TBODY');
+    table.appendChild(tableBody);
+      
+    /**
+	for (var i=0; i<3; i++){
+       var tr = document.createElement('TR');
+       tableBody.appendChild(tr);
+       
+       for (var j=0; j<4; j++){
+           var td = document.createElement('TD');
+           td.width='75';
+           td.appendChild(document.createTextNode("Cell " + i + "," + j));
+           tr.appendChild(td);
+       }
+    }
+    myTableDiv.appendChild(table);
+    var rowCount = table.rows.length;
+	**/
+	
+	var tempString1 = "";
+	var tempString2 = "";
+	
+	
+	
+	//process markers and create base table
+	for (var i = 0; i < origins.length; i++) {
+      var results = response.rows[i].elements;
+      addMarker(origins[i], false);
+	  
+	  // test if i == 0. If yes, populate the first row with the destination label.
+	  	  
+	  if (i == 0) {
+		//create the row for the headings
+		var tr = document.createElement('TR');
+		tableBody.appendChild(tr);
+		//create the top left corner cell
+		var td = document.createElement('TD');
+        td.width='150';
+		//tempString1 = origins[i];
+		//tempString1 = tempString1.slice(0, tempString1.indexOf(","));
+		td.appendChild(document.createTextNode(" "));
+        tr.appendChild(td);
+		
+		//
+		for (var j = 1; j < origins.length; j++) {
+        		
+			tempString1 = origins[j];
+			tempString1 = tempString1.slice(0, tempString1.indexOf(","));
+			
+			var td = document.createElement('TD');
+			td.width='150';
+			td.appendChild(document.createTextNode(tempString1));
+			tr.appendChild(td);
+			
+			tempString1 = "";
+					
+		}
+		
+	  }	
+	  else {
+		//do nothing
+	  }
+	  // create the row for the main body of data
+	  var tr = document.createElement('TR');
+      tableBody.appendChild(tr);
+	  
+	  //now do the normal traverse to get results.
+	  // first check if we are at the last row, if yes we can break as last row is empty.
+	  if (i==origins.length-1){
+		break;
+	  }
+	
+	//now process the columns (destinations)
+	//start at j=1 as the first column is a replica therefore we can skip.
+	  for (var j = 0; j < results.length; j++) {
+      //  addMarker(destinations[j], true);
+		
+		//tempString1 = "O:"+origins[i];
+		tempString1 = origins[i];
+		tempString1 = tempString1.slice(0, tempString1.indexOf(","));
+		
+				
+		//create the list of destination names in the first column on the first iteration.
+		//the first iteration in this instance is j==1 as we skip the first column (replica).
+		if (j==0){
+			var td = document.createElement('TD');
+			td.width='150';
+			td.appendChild(document.createTextNode(tempString1));
+			tr.appendChild(td);
+			
+		}
+		else{
+		//do nothing	
+		}	
+        
+		
+		if (j>0){
+		
+			var td = document.createElement('TD');
+			td.width='150';
+			td.class = "tableOut";
+			if (j>i){
+			//td.appendChild(document.createTextNode(tempString1 + ": " + i + "," + j));
+				//td.appendChild(document.createTextNode(results[j].distance.text + " in " + results[j].duration.text +i+","+j));
+				var b = document.createElement('button');
+				b.class="btn-out";
+				b.id = j+","+i;
+				b.name = "button"+b.id;
+				
+								
+				b.innerHTML = results[j].distance.text + " [" + results[j].duration.text+"]";
+				console.log("Created button: " + b.id +"::" + b.name);
+				b.addEventListener("click", function(){
+					calcRoute(this);
+					},false);
+						
+				td.appendChild(b);
+				//set the height/width to be 100% of the cell size.
+				//can only do this once button has become part of the table in line above.
+				b.style.width = "100%";
+				b.style.height = "100%";
+				
+			}
+			else{
+				td.appendChild(document.createTextNode("-"));
+			}
+			tr.appendChild(td);
+		
+		
+		tempString1 = "";
+		tempString2 = "";
+		}//end if
+      }
+    }
+		document.getElementById("outputDiv").innerHTML = 
+			"<p id='introP'><b>Click on the text in the table below to show the suggested route.</b></p>";	 
+		myTableDiv.appendChild(table);
+	
+	//set event handler after buttons are created
+	
+	//$("#myDynamicTable").on("click", ".dynamicRouteButton", function () {
+	//		calcRoute(this);
+	//		});
+	
+	
+  }  
+  
+}
+
+
+function toggleCycleLayerOn(){
+//set bicycle layer
+	
+	bikeLayer.setMap(map);
+}
+
+function toggleCycleLayerOff(){
+//set bicycle layer
+	
+	bikeLayer.setMap(null);
+}
+
+function addMarker(location, isDestination) {
+  /*var icon;
+  if (isDestination) {
+    icon = destinationIcon;
+  } else {
+    icon = originIcon;
+  }
+  */
+  geocoder.geocode({'address': location}, function(results, status) {
+    if (status == google.maps.GeocoderStatus.OK) {
+      bounds.extend(results[0].geometry.location);
+      map.fitBounds(bounds);
+        
+	  
+	  var marker = new google.maps.Marker({
+        map: map,
+        position: results[0].geometry.location,
+		//animation: DROP
+		//zIndex: markerZIndex
+        //icon: icon
+		//icon: results[0].icon
+		//url: results[0].icon
+      });
+	  //marker.setAnimation(DROP);	  
+	   /**
+	   // Set different icons depending on the place found.
+	   // Need to use the 
+	   
+	   
+	  var image = {
+            url: results[0].icon,
+            size: new google.maps.Size(71, 71),
+            origin: new google.maps.Point(0, 0),
+            anchor: new google.maps.Point(17, 34),
+            scaledSize: new google.maps.Size(35, 35)
+          };
+          marker.setIcon(image);
+          marker.setPosition(place.geometry.location);
+          marker.setVisible(true);
+		 **/ 
+      markersArray.push(marker);
+	  //markerZIndex = markerZIndex + 1;
+    } else {
+      alert('Geocode was not successful for the following reason: '
+        + status);
+    }
+  });
+}
+
+function deleteOverlays() {
+  for (var i = 0; i < markersArray.length; i++) {
+    markersArray[i].setMap(null);
+  }
+  markersArray = [];
+  //markerZIndex = 1;
+  
+}
+
+
+
+function calcRoute(button) {
+ // startInt is the index to the start address input box
+ // endInt is the index to the start address input box
+ 
+ // var start = markersArray[0].getPosition();
+ // var end = markersArray[1].getPosition();
+	deleteOverlays();
+  
+	var tempString1 = button.id;
+	tempString1 = tempString1.split(',');
+	var start = tempString1[0];
+	var end = tempString1[1];
+	console.log("Button:" + button.id + "-" + button.name + " j:" + tempString1[0] + "i:" + tempString1[1]);
+	console.log(start+",");
+	console.log(end);
+					
+	var start = origins[start];
+	var end = destinations[end];
+	//var start = input1.value;
+	//var end = input2.value;
+	var request = {
+      origin:start,
+      destination:end,
+      travelMode: google.maps.DirectionsTravelMode.DRIVING
+	};
+  directionsService.route(request, function(response, status) {
+    if (status == google.maps.DirectionsStatus.OK) {
+      directionsDisplay.setDirections(response);
+    }
+  });
+}
+
+
+
+
+/** Modernizr **/
+$(document).ready(function(){
+
+if(!Modernizr.input.placeholder){
+
+	$('[placeholder]').focus(function() {
+	  var input = $(this);
+	  if (input.val() == input.attr('placeholder')) {
+		input.val('');
+		input.removeClass('placeholder');
+	  }
+	}).blur(function() {
+	  var input = $(this);
+	  if (input.val() == '' || input.val() == input.attr('placeholder')) {
+		input.addClass('placeholder');
+		input.val(input.attr('placeholder'));
+	  }
+	}).blur();
+	$('[placeholder]').parents('form').submit(function() {
+	  $(this).find('[placeholder]').each(function() {
+		var input = $(this);
+		if (input.val() == input.attr('placeholder')) {
+		  input.val('');
+		}
+	  })
+	});
+
+}
+	//initialise other UI stuff
+	//toggle the cycling layer button to be 'off'.
+	
+
+});
+
+google.maps.event.addDomListener(window, 'load', initialize);
+
+  </script>
+  </head>
+  <body>
+  <h1>tnd [Maps]</h1>
+  <p id="introP">Love Google Maps but want to plot multiple locations simultaneously?<br>
+	<b>Enter tnd[Maps].</b> </p>
+    <div id="content-pane">
+	<h2>Enter locations below</h2>
+	<p>Just enter the locations below and you're done. tnd[Maps] also provides the distances between these multiple locations.
+	</p>
+      <div id="inputs">
+<!--var origin1 = new google.maps.LatLng(55.930, -3.118);
+var origin2 = 'Greenwich, England';
+var destinationA = 'Stockholm, Sweden';
+var destinationB = new google.maps.LatLng(50.087, 14.421);
+-->
+		<form class="form" id = "inputform">
+		<p>
+			<input id="searchTextField1" data-provide="typeahead" type="text" placeholder="Enter location 1">
+			<input id="searchTextField2" type="text" placeholder="Enter location 2">
+			<input id="searchTextField3" type="text" placeholder="Enter location 3">
+			<input id="searchTextField4" type="text" placeholder="Enter location 4"></p>
+		</form>
+
+        
+        <p><button type="button" class = "btn btn-primary" onclick="calculateDistances();">Calculate distances</button>
+		</div> <!--end div inputs group -->
+		
+			<div class="btn-group" data-toggle="buttons-radio">
+			<input id="toggle-off" onclick="toggleCycleLayerOff();" class="toggle toggle-left btn" name="toggle" value="false" type="radio" checked>
+			<label for="toggle-off" class="btn">Off</label>
+			<input id="toggle-on" onclick="toggleCycleLayerOn();" class="toggle toggle-right btn" name="toggle" value="true" type="radio">
+			<label for="toggle-on" class="btn">On</label>
+			</div> <!--end div button group -->
+			<b>Toggle Cycle Paths</b>
+			</p>
+			
+			 <!--   <div class="btn-group" data-toggle="buttons-radio">
+					<button type="button" input id="toggle-off" onclick="toggleCycleLayerOff();" class="btn btn-primary btn-left">Off</button>
+					<!--<button type="button" class="btn btn-primary">Middle</button>-->
+			<!--		<button type="button" input id="toggle-on" onclick="toggleCycleLayerOn();" class="btn btn-primary btn-right">On</button>
+				</div>
+			-->	
+			
+
+		
+		<!--<p><button type="radio" onclick="toggleCycleLayer();">Toggle Cycle Paths</button></p>-->
+      
+      <div id="outputDiv" name="outputDiv"></div>
+	  <div id="myDynamicTable" name = "myDynamicTable" class="tableOut"></div>
+	  
+    </div> <!--end div content-pane -->
+    <div id="map-canvas"></div>
+  </body>
+</html>
+
