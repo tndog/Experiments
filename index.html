@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Experiments - Home</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .light {
+            transition: background-color 0.05s ease-in-out, border-color 0.05s ease-in-out, box-shadow 0.05s ease-in-out;
+        }
+        .light.active {
+            /* Active light style is applied via Tailwind classes */
+        }
+        button:focus {
+            outline: none; /* Tailwind provides focus:ring */
+        }
+        .team-button-container button {
+            /* Ensure buttons in a column have consistent width */
+            width: 100%;
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="bg-slate-900 text-white flex flex-col items-center justify-center min-h-screen p-2 sm:p-4 select-none">
+
+    <div class="bg-slate-800 p-4 sm:p-6 md:p-8 rounded-xl shadow-2xl w-full max-w-4xl lg:max-w-5xl">
+        <h1 class="text-3xl sm:text-4xl font-bold text-center text-sky-400 mb-4 sm:mb-6">tndog Experiments</h1>
+
+        <div class="flex justify-around mb-4 sm:mb-6 text-xl sm:text-2xl">
+		<ul>
+            <li>Kick It: <a href="switch10.html" class="font-bold text-pink-400">Play</a></li>
+            <li>Switch 10 (or Leapfrog or Frogs & Toads): <a href="kick-it-4P.html" class="font-bold text-teal-400">Play</a></li>
+        </ul>
+
+		</div>
+	</div>
+	
+</body>
+</html>
