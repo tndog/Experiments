@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kick-It Lights - Team Game</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .light {
+            transition: background-color 0.05s ease-in-out, border-color 0.05s ease-in-out, box-shadow 0.05s ease-in-out;
+        }
+        .light.active {
+            /* Active light style is applied via Tailwind classes */
+        }
+        button:focus {
+            outline: none; /* Tailwind provides focus:ring */
+        }
+        .team-button-container button {
+            /* Ensure buttons in a column have consistent width */
+            width: 100%;
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="bg-slate-900 text-white flex flex-col items-center justify-center min-h-screen p-2 sm:p-4 select-none">
+
+    <div class="bg-slate-800 p-4 sm:p-6 md:p-8 rounded-xl shadow-2xl w-full max-w-4xl lg:max-w-5xl">
+        <h1 class="text-3xl sm:text-4xl font-bold text-center text-sky-400 mb-4 sm:mb-6">Kick-It Lights - Team Mode</h1>
+
+        <div class="flex justify-around mb-4 sm:mb-6 text-xl sm:text-2xl">
+            <div>Team 1: <span id="team1Score" class="font-bold text-pink-400">0</span></div>
+            <div>Team 2: <span id="team2Score" class="font-bold text-teal-400">0</span></div>
+        </div>
+
+        <div class="flex items-stretch justify-center space-x-2 sm:space-x-3 md:space-x-4 mb-4 sm:mb-6">
+            <div id="team1ButtonsContainer" class="flex flex-col justify-around space-y-1 sm:space-y-1.5 team-button-container">
+                </div>
+
+            <div id="lightsContainer" class="flex flex-col space-y-1 sm:space-y-1.5 bg-slate-700 p-1 sm:p-2 rounded-md overflow-hidden flex-grow">
+                </div>
+
+            <div id="team2ButtonsContainer" class="flex flex-col justify-around space-y-1 sm:space-y-1.5 team-button-container">
+                </div>
+        </div>
+
+        <div id="messageArea" class="text-center text-base sm:text-lg text-sky-300 mb-4 sm:mb-6 h-7 sm:h-8">
+            Press "Start Game" to begin!
+        </div>
+
+        <div class="flex flex-col sm:flex-row justify-center items-center space-y-3 sm:space-y-0 sm:space-x-4">
+            <button id="startButton" class="w-full sm:w-auto px-5 py-2.5 sm:px-6 sm:py-3 bg-green-500 hover:bg-green-600 disabled:bg-green-700 disabled:opacity-50 text-white font-bold rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-opacity-75 transition-all duration-150 text-sm sm:text-base">
+                Start Game
+            </button>
+            <button id="resetButton" class="w-full sm:w-auto px-5 py-2.5 sm:px-6 sm:py-3 bg-red-500 hover:bg-red-600 text-white font-bold rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-opacity-75 transition-all duration-150 text-sm sm:text-base">
+                Reset Scores
+            </button>
+            <button id="muteButton" class="w-full sm:w-auto px-5 py-2.5 sm:px-6 sm:py-3 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75 transition-all duration-150 text-sm sm:text-base">
+                Mute
+            </button>
+        </div>
+         <div class="text-center text-xs text-slate-500 mt-4 sm:mt-6">
+            Team 1 (Lines 1-4): 'Q', 'W', 'E', 'R' or Click. Team 2 (Lines 1-4): 'U', 'I', 'O', 'P' or Click.
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- DOM Elements ---
+            const team1ScoreDisplay = document.getElementById('team1Score');
+            const team2ScoreDisplay = document.getElementById('team2Score');
+            const team1ButtonsContainer = document.getElementById('team1ButtonsContainer');
+            const team2ButtonsContainer = document.getElementById('team2ButtonsContainer');
+            const lightsContainer = document.getElementById('lightsContainer');
+            const messageArea = document.getElementById('messageArea');
+            const startButton = document.getElementById('startButton');
+            const resetButton = document.getElementById('resetButton');
+            const muteButton = document.getElementById('muteButton'); // Mute button element
+
+            // --- Game Constants ---
+            const NUM_LINES = 4;
+            const NUM_LIGHTS_PER_LINE = 12;
+            const INITIAL_SPEED_MS = 380;
+            const MIN_SPEED_MS = 80;
+            const SPEED_INCREASE_FACTOR = 0.93;
+            const LINE_JUMP_PROBABILITY = 0.15;
+
+            // --- Game State Variables ---
+            let lightElements = [];
+            let team1Buttons = [];
+            let team2Buttons = [];
+            let team1Score = 0;
+            let team2Score = 0;
+            let currentLightPosition = { line: 0, index: -1 };
+            let direction = 1;
+            let ballSpeed = INITIAL_SPEED_MS;
+            let rallyActive = false;
+            let gameIntervalId = null;
+            let serveTeam = 1;
+
+            // --- Sound Variables ---
+            let synth = null;
+            let isAudioStarted = false;
+            let isMuted = false; // Mute state variable
+
+            // Initialize Tone.js synth
+            if (typeof Tone !== 'undefined') {
+                try {
+                    synth = new Tone.Synth({
+                        oscillator: { type: 'sine' },
+                        envelope: { attack: 0.005, decay: 0.05, sustain: 0.0, release: 0.1 }
+                    }).toDestination();
+                } catch (e) {
+                    console.warn("Tone.js synth could not be initialized. Sounds may not play.", e);
+                    synth = null;
+                }
+            } else {
+                console.warn("Tone.js library not found. Sounds will not play.");
+            }
+
+
+            // --- Initialize UI ---
+            function createGameUI() {
+                lightsContainer.innerHTML = '';
+                lightElements = [];
+                for (let l = 0; l < NUM_LINES; l++) {
+                    const lineDiv = document.createElement('div');
+                    lineDiv.className = 'flex space-x-1 sm:space-x-1.5 justify-center';
+                    const currentLineLights = [];
+                    for (let i = 0; i < NUM_LIGHTS_PER_LINE; i++) {
+                        const lightElement = document.createElement('div');
+                        lightElement.className = 'light w-3 h-6 sm:w-4 sm:h-8 md:w-5 md:h-10 bg-slate-600 rounded-sm border-2 border-slate-500';
+                        lineDiv.appendChild(lightElement);
+                        currentLineLights.push(lightElement);
+                    }
+                    lightsContainer.appendChild(lineDiv);
+                    lightElements.push(currentLineLights);
+                }
+
+                team1ButtonsContainer.innerHTML = '';
+                team2ButtonsContainer.innerHTML = '';
+                team1Buttons = [];
+                team2Buttons = [];
+
+                const t1KeyMap = ['Q', 'W', 'E', 'R'];
+                const t2KeyMap = ['U', 'I', 'O', 'P'];
+
+                for (let l = 0; l < NUM_LINES; l++) {
+                    const btn1 = document.createElement('button');
+                    btn1.id = `t1_line${l}_button`;
+                    btn1.className = `px-2 py-1 sm:px-3 sm:py-2 md:px-4 md:py-2.5 bg-pink-500 hover:bg-pink-600 disabled:bg-pink-700 disabled:opacity-50 text-white font-semibold rounded-md shadow-md focus:outline-none focus:ring-2 focus:ring-pink-400 focus:ring-opacity-75 transition-all duration-150 text-xs sm:text-sm whitespace-nowrap`;
+                    btn1.textContent = `T1 L${l+1} (${t1KeyMap[l]})`;
+                    btn1.disabled = true;
+                    btn1.addEventListener('click', () => handlePlayerButton(1, l));
+                    team1ButtonsContainer.appendChild(btn1);
+                    team1Buttons.push(btn1);
+
+                    const btn2 = document.createElement('button');
+                    btn2.id = `t2_line${l}_button`;
+                    btn2.className = `px-2 py-1 sm:px-3 sm:py-2 md:px-4 md:py-2.5 bg-teal-500 hover:bg-teal-600 disabled:bg-teal-700 disabled:opacity-50 text-white font-semibold rounded-md shadow-md focus:outline-none focus:ring-2 focus:ring-teal-400 focus:ring-opacity-75 transition-all duration-150 text-xs sm:text-sm whitespace-nowrap`;
+                    btn2.textContent = `T2 L${l+1} (${t2KeyMap[l]})`;
+                    btn2.disabled = true;
+                    btn2.addEventListener('click', () => handlePlayerButton(2, l));
+                    team2ButtonsContainer.appendChild(btn2);
+                    team2Buttons.push(btn2);
+                }
+            }
+
+            // --- Update UI Functions ---
+            function updateScoreDisplay() {
+                team1ScoreDisplay.textContent = team1Score;
+                team2ScoreDisplay.textContent = team2Score;
+            }
+
+            function updateMessage(message) {
+                messageArea.textContent = message;
+            }
+
+            function setActiveLight(line, index) {
+                let soundPlayedThisUpdate = false;
+                lightElements.forEach((lineArr, lIdx) => {
+                    lineArr.forEach((light, iIdx) => {
+                        if (lIdx === line && iIdx === index) {
+                            light.classList.add('active', 'bg-yellow-400', 'shadow-lg', 'shadow-yellow-400/50', 'border-yellow-300');
+                            light.classList.remove('bg-slate-600', 'border-slate-500');
+                            if (!isMuted && rallyActive && synth && Tone.context.state === 'running' && !soundPlayedThisUpdate) { // Check isMuted
+                                synth.triggerAttackRelease("G5", "32n", Tone.now());
+                                soundPlayedThisUpdate = true;
+                            }
+                        } else {
+                            light.classList.remove('active', 'bg-yellow-400', 'shadow-lg', 'shadow-yellow-400/50', 'border-yellow-300');
+                            light.classList.add('bg-slate-600', 'border-slate-500');
+                        }
+                    });
+                });
+            }
+
+            function turnOffAllLights() {
+                lightElements.forEach(lineArr => {
+                    lineArr.forEach(light => {
+                        light.classList.remove('active', 'bg-yellow-400', 'shadow-lg', 'shadow-yellow-400/50', 'border-yellow-300');
+                        light.classList.add('bg-slate-600', 'border-slate-500');
+                    });
+                });
+                currentLightPosition = { line: 0, index: -1 };
+            }
+            
+            function setPlayerButtonsState(disabled) {
+                team1Buttons.forEach(btn => btn.disabled = disabled);
+                team2Buttons.forEach(btn => btn.disabled = disabled);
+            }
+
+            // --- Game Logic Functions ---
+            async function startGameOrRally() {
+                if (rallyActive) return;
+
+                if (!isAudioStarted && typeof Tone !== 'undefined' && Tone.start) {
+                    try {
+                        await Tone.start();
+                        console.log("AudioContext started successfully by user interaction.");
+                        isAudioStarted = true;
+                    } catch (e) {
+                        console.warn("Could not start AudioContext on user interaction. Sounds may not play.", e);
+                    }
+                }
+
+                rallyActive = true;
+                startButton.disabled = true;
+                startButton.textContent = "Rally in Progress...";
+                setPlayerButtonsState(false);
+                ballSpeed = INITIAL_SPEED_MS;
+
+                let startingLine = Math.floor(Math.random() * NUM_LINES);
+                if (serveTeam === 1) {
+                    currentLightPosition = { line: startingLine, index: 0 };
+                    direction = 1;
+                    updateMessage(`Team 1 serves on Line ${startingLine + 1}! Ball to Team 2.`);
+                } else {
+                    currentLightPosition = { line: startingLine, index: NUM_LIGHTS_PER_LINE - 1 };
+                    direction = -1;
+                    updateMessage(`Team 2 serves on Line ${startingLine + 1}! Ball to Team 1.`);
+                }
+                
+                setActiveLight(currentLightPosition.line, currentLightPosition.index);
+                
+                if (gameIntervalId) clearInterval(gameIntervalId);
+                gameIntervalId = setInterval(runGameLoop, ballSpeed);
+            }
+
+            function runGameLoop() {
+                if (!rallyActive) return;
+
+                if (currentLightPosition.index >= 0 && currentLightPosition.index < NUM_LIGHTS_PER_LINE &&
+                    currentLightPosition.line >= 0 && currentLightPosition.line < NUM_LINES) {
+                    lightElements[currentLightPosition.line][currentLightPosition.index].classList.remove('active', 'bg-yellow-400', 'shadow-lg', 'shadow-yellow-400/50', 'border-yellow-300');
+                    lightElements[currentLightPosition.line][currentLightPosition.index].classList.add('bg-slate-600', 'border-slate-500');
+                }
+
+                if (Math.random() < LINE_JUMP_PROBABILITY) {
+                    let possibleNextLines = [];
+                    if (currentLightPosition.line > 0) possibleNextLines.push(currentLightPosition.line - 1);
+                    if (currentLightPosition.line < NUM_LINES - 1) possibleNextLines.push(currentLightPosition.line + 1);
+                    
+                    if (possibleNextLines.length > 0) {
+                         possibleNextLines.push(currentLightPosition.line); 
+                         const previousLine = currentLightPosition.line;
+                         currentLightPosition.line = possibleNextLines[Math.floor(Math.random() * possibleNextLines.length)];
+                         if (previousLine !== currentLightPosition.line) {
+                            updateMessage(`Ball jumped to Line ${currentLightPosition.line + 1}!`);
+                         }
+                    }
+                }
+
+                let newLightIndex = currentLightPosition.index + direction;
+
+                if (newLightIndex < 0) {
+                    endRally(2); 
+                    return;
+                }
+                if (newLightIndex >= NUM_LIGHTS_PER_LINE) {
+                    endRally(1); 
+                    return;
+                }
+
+                currentLightPosition.index = newLightIndex;
+                setActiveLight(currentLightPosition.line, currentLightPosition.index);
+            }
+
+            function handlePlayerButton(teamNum, lineNum) {
+                if (!rallyActive) return;
+
+                let hitSuccess = false;
+                const targetIndex = (teamNum === 1) ? 0 : NUM_LIGHTS_PER_LINE - 1;
+
+                if (currentLightPosition.line === lineNum && currentLightPosition.index === targetIndex) {
+                    if (teamNum === 1) {
+                        direction = 1; 
+                        updateMessage(`Team 1 (L${lineNum+1}) hits!`);
+                        hitSuccess = true;
+                    } else { 
+                        direction = -1; 
+                        updateMessage(`Team 2 (L${lineNum+1}) hits!`);
+                        hitSuccess = true;
+                    }
+                } else {
+                    if (teamNum === 1) {
+                        updateMessage(`Team 1 mistimed/wrong line! Team 2 scores.`);
+                        endRally(2);
+                    } else {
+                        updateMessage(`Team 2 mistimed/wrong line! Team 1 scores.`);
+                        endRally(1);
+                    }
+                    return;
+                }
+
+                if (hitSuccess) {
+                    ballSpeed = Math.max(MIN_SPEED_MS, ballSpeed * SPEED_INCREASE_FACTOR);
+                    clearInterval(gameIntervalId);
+
+                    if (currentLightPosition.index >= 0 && currentLightPosition.index < NUM_LIGHTS_PER_LINE &&
+                        currentLightPosition.line >= 0 && currentLightPosition.line < NUM_LINES) {
+                        lightElements[currentLightPosition.line][currentLightPosition.index].classList.remove('active', 'bg-yellow-400', 'shadow-lg', 'shadow-yellow-400/50', 'border-yellow-300');
+                        lightElements[currentLightPosition.line][currentLightPosition.index].classList.add('bg-slate-600', 'border-slate-500');
+                    }
+                    
+                    if (Math.random() < LINE_JUMP_PROBABILITY / 2) { 
+                         let possibleNextLines = [];
+                        if (currentLightPosition.line > 0) possibleNextLines.push(currentLightPosition.line - 1);
+                        if (currentLightPosition.line < NUM_LINES - 1) possibleNextLines.push(currentLightPosition.line + 1);
+                        if (possibleNextLines.length > 0) {
+                             const previousLine = currentLightPosition.line;
+                             currentLightPosition.line = possibleNextLines[Math.floor(Math.random() * possibleNextLines.length)];
+                             if (previousLine !== currentLightPosition.line && rallyActive) {
+                                updateMessage(messageArea.textContent + ` Jumped to L${currentLightPosition.line + 1}!`);
+                             }
+                        }
+                    }
+
+                    currentLightPosition.index += direction; 
+                    
+                    if (currentLightPosition.index < 0 || currentLightPosition.index >= NUM_LIGHTS_PER_LINE) {
+                        console.error("Ball out of bounds after hit - this shouldn't happen");
+                        endRally(teamNum === 1 ? 2 : 1); 
+                        return;
+                    }
+                    setActiveLight(currentLightPosition.line, currentLightPosition.index);
+                    gameIntervalId = setInterval(runGameLoop, ballSpeed);
+                }
+            }
+
+            function endRally(winningTeamNum) {
+                rallyActive = false;
+                if (gameIntervalId) clearInterval(gameIntervalId);
+                setPlayerButtonsState(true);
+
+                if (winningTeamNum === 1) {
+                    team1Score++;
+                    updateMessage(`Team 1 scores! (${team1Score}-${team2Score})`);
+                    serveTeam = 2;
+                } else if (winningTeamNum === 2) {
+                    team2Score++;
+                    updateMessage(`Team 2 scores! (${team1Score}-${team2Score})`);
+                    serveTeam = 1;
+                }
+                updateScoreDisplay();
+                
+                setTimeout(() => {
+                    if (rallyActive) return;
+                    updateMessage(messageArea.textContent + " Press 'Next Rally'.");
+                    startButton.disabled = false;
+                    startButton.textContent = "Next Rally";
+                }, 1000);
+            }
+
+            function resetGame() {
+                rallyActive = false;
+                if (gameIntervalId) clearInterval(gameIntervalId);
+
+                team1Score = 0;
+                team2Score = 0;
+                updateScoreDisplay();
+                
+                turnOffAllLights();
+                updateMessage("Game Reset. Press 'Start Game' to play.");
+                
+                startButton.disabled = false;
+                startButton.textContent = "Start Game";
+                setPlayerButtonsState(true);
+                serveTeam = 1;
+            }
+
+            function toggleMute() {
+                isMuted = !isMuted;
+                muteButton.textContent = isMuted ? "Unmute" : "Mute";
+                muteButton.classList.toggle('bg-blue-500', !isMuted); // Standard color when not muted
+                muteButton.classList.toggle('hover:bg-blue-600', !isMuted);
+                muteButton.classList.toggle('bg-yellow-500', isMuted); // Different color when muted
+                muteButton.classList.toggle('hover:bg-yellow-600', isMuted);
+                
+                // If unmuting and audio context hasn't started, try to start it.
+                // This is mainly for cases where the game hasn't started yet but user unmutes.
+                if (!isMuted && !isAudioStarted && typeof Tone !== 'undefined' && Tone.start) {
+                     Tone.start().then(() => {
+                        isAudioStarted = true;
+                        console.log("AudioContext started by mute button interaction.");
+                    }).catch(e => console.warn("Could not start AudioContext via mute button.", e));
+                }
+                console.log(isMuted ? "Sound Muted" : "Sound Unmuted");
+            }
+
+            // --- Event Listeners ---
+            startButton.addEventListener('click', startGameOrRally);
+            resetButton.addEventListener('click', resetGame);
+            muteButton.addEventListener('click', toggleMute); // Mute button listener
+
+            const team1Keys = ['q', 'w', 'e', 'r'];
+            const team2Keys = ['u', 'i', 'o', 'p'];
+
+            document.addEventListener('keydown', (event) => {
+                const key = event.key.toLowerCase();
+                
+                if (!rallyActive && (team1Keys.includes(key) || team2Keys.includes(key))) return;
+                
+                let team1KeyIndex = team1Keys.indexOf(key);
+                if (team1KeyIndex !== -1 && team1Buttons[team1KeyIndex] && !team1Buttons[team1KeyIndex].disabled) {
+                    handlePlayerButton(1, team1KeyIndex);
+                    team1Buttons[team1KeyIndex].classList.add('ring-2', 'ring-pink-400');
+                    setTimeout(() => team1Buttons[team1KeyIndex].classList.remove('ring-2', 'ring-pink-400'), 150);
+                    return;
+                }
+
+                let team2KeyIndex = team2Keys.indexOf(key);
+                if (team2KeyIndex !== -1 && team2Buttons[team2KeyIndex] && !team2Buttons[team2KeyIndex].disabled) {
+                    handlePlayerButton(2, team2KeyIndex);
+                    team2Buttons[team2KeyIndex].classList.add('ring-2', 'ring-teal-400');
+                    setTimeout(() => team2Buttons[team2KeyIndex].classList.remove('ring-2', 'ring-teal-400'), 150);
+                    return;
+                }
+            });
+
+            // --- Initial Setup ---
+            createGameUI();
+            updateScoreDisplay();
+        });
+    </script>
+</body>
+</html>
