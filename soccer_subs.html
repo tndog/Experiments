@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Dragonflies Soccer Master v11.4</title>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <style>
+        :root { --pitch-green: #4caf50; --accent-green: #2e7d32; --dragonfly-blue: #0288d1; --summary-orange: #ffa000; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding: 0; display: flex; flex-direction: column; min-height: 100vh; width: 100%; overflow-x: hidden; }
+        .section-container { width: 100%; box-sizing: border-box; background: white; padding: 12px; border-bottom: 1px solid #ddd; }
+        
+        .summary-active .hide-in-summary, .summary-active .field-viewport { display: none !important; }
+        .summary-active .btn-summary-toggle { background: var(--pitch-green) !important; }
+
+        /* Clean Export Styling */
+        .exporting .remove-btn { display: none !important; }
+        #export-area { background: white; width: 100%; max-width: 500px; margin: 0 auto; }
+        
+        /* The header that only appears in the PNG */
+        #static-export-header { 
+            display: none; 
+            background: var(--dragonfly-blue); 
+            color: white; 
+            padding: 15px; 
+            text-align: center; 
+            border-bottom: 3px solid rgba(0,0,0,0.1);
+        }
+        .exporting #static-export-header { display: block; }
+        #static-export-header h2 { margin: 0; font-size: 20px; }
+        #static-export-header p { margin: 5px 0 0; font-size: 12px; opacity: 0.9; font-weight: bold; }
+
+        /* Main Header for Browser */
+        .match-header { text-align: center; background: var(--dragonfly-blue); color: white; padding: 10px; }
+        .match-header h1 { margin: 0; font-size: 18px; }
+        .match-details { display: flex; justify-content: center; align-items: center; gap: 6px; font-size: 11px; white-space: nowrap; margin-top: 4px; }
+        .detail-input { background: transparent; border: none; border-bottom: 1px solid rgba(255,255,255,0.5); color: white; text-align: center; font-size: 11px; width: 70px; }
+
+        .timer-row { display: flex; justify-content: space-around; align-items: center; background: #222; color: #00ff00; padding: 10px 5px; font-family: monospace; border-bottom: 2px solid #444; }
+        .timer-box { flex: 0 0 25%; text-align: center; }
+        .timer-box div { font-size: 18px; }
+        .timer-label { font-size: 8px; color: #aaa; text-transform: uppercase; display: block; margin-bottom: 2px; }
+        .btn-pause-main { flex: 0 0 25%; padding: 10px 0; background: #444; color: white; border: 1px solid #666; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 11px; }
+
+        .half-selector { display: flex; justify-content: center; background: #e1f5fe; padding: 8px; gap: 4px; align-items: center; flex-wrap: wrap; }
+        .btn-nav { background: #fff; color: #0288d1; border: 2px solid #0288d1; padding: 6px 8px; border-radius: 20px; font-weight: bold; cursor: pointer; font-size: 10px; flex: 1; min-width: 70px; }
+        .btn-nav.active { background: #0288d1; color: #fff; }
+        .btn-util { background: var(--summary-orange); color: white; border: none; padding: 6px 10px; border-radius: 20px; font-weight: bold; cursor: pointer; font-size: 10px; }
+
+        textarea#player-names { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; font-family: inherit; resize: none; box-sizing: border-box; }
+        .control-row { display: flex; gap: 6px; justify-content: space-between; margin-top: 5px; }
+        .control-item { display: flex; flex-direction: column; gap: 2px; flex: 1; }
+        .control-item label { font-size: 8px; font-weight: bold; color: #666; text-transform: uppercase; }
+        input[type="number"] { padding: 8px 4px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; width: 100%; text-align: center; }
+        
+        .btn-group { display: flex; gap: 6px; margin-top: 8px; }
+        .btn-action { padding: 10px; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 10px; flex: 1; text-transform: uppercase; }
+
+        #minute-list { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+        .stat-box { background: #f9f9f9; padding: 5px 8px; border-radius: 4px; border: 1px solid #eee; font-size: 10px; display: flex; justify-content: space-between; align-items: center; white-space: nowrap; overflow: hidden; }
+        .stat-name { font-weight: bold; overflow: hidden; text-overflow: ellipsis; max-width: 65px; margin-right: 5px; }
+        .absent-player { opacity: 0.3; }
+        .target-stmt { font-size: 10px; color: #444; font-weight: bold; margin-bottom: 8px; display: block; text-align: center; }
+
+        #bench { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; background: #fff; padding: 10px; border: 1px dashed #ccc; border-radius: 6px; }
+        .player-tag { background: white; padding: 6px 2px; border-radius: 4px; cursor: grab; font-size: 11px; font-weight: bold; border: 1px solid #777; text-align: center; position: relative; touch-action: none; user-select: none; box-shadow: 1px 1px 2px rgba(0,0,0,0.1); }
+        .remove-btn { position: absolute; right: -6px; top: -6px; background: #ff4444; color: white; border-radius: 50%; width: 16px; height: 16px; font-size: 11px; display: flex; align-items: center; justify-content: center; border: 1px solid white; }
+
+        .field-viewport { background: #cbd5e0; padding: 15px 0; display: flex; justify-content: center; overflow-x: auto; }
+        .field-container { position: relative; width: 95%; max-width: 480px; height: 750px; background: var(--pitch-green); border: 5px solid white; border-radius: 20px; flex-shrink: 0; }
+        .line { position: absolute; border: 1px solid rgba(255,255,255,0.7); pointer-events: none; }
+        
+        .pos-cluster { position: absolute; display: flex; flex-direction: column; gap: 3px; transform: translate(-50%, -50%); width: 82px; }
+        .pos-label { color: white; font-weight: bold; text-align: center; font-size: 11px; text-shadow: 1px 1px 2px black; }
+        .sub-slot { min-height: 31px; background: rgba(255, 255, 255, 0.2); border: 1px dashed white; border-radius: 4px; display: flex; align-items: center; justify-content: center; position: relative; }
+        .sub-slot small { position: absolute; left: -32px; color: white; font-size: 8px; font-weight: bold; text-align: right; width: 28px; }
+
+        #cluster-LF { top: 15%; left: 19%; } #cluster-RF { top: 15%; left: 81%; }
+        #cluster-S  { top: 28%; left: 50%; } #cluster-CM { top: 60%; left: 50%; } 
+        #cluster-LB { top: 78%; left: 19%; } #cluster-RB { top: 78%; left: 81%; }
+        #cluster-GK { top: 92%; left: 50%; }
+
+        .data-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 10px; }
+        .data-table th, .data-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        .data-table th { background: #f4f4f4; }
+        .change-pill { display: inline-block; background: #e3f2fd; padding: 4px 8px; border-radius: 12px; margin: 2px; border: 1px solid #90caf9; }
+        .arrow-icon { color: var(--accent-green); font-weight: bold; margin: 0 3px; font-size: 1.1em; vertical-align: middle; }
+        .conflict { background-color: #ffcccc !important; border: 2px solid red !important; animation: shake 0.3s; }
+        @keyframes shake { 0%, 100% {transform: translateX(0);} 25% {transform: translateX(-2px);} 75% {transform: translateX(2px);} }
+    </style>
+</head>
+<body ondragover="handleAutoScroll(event)">
+
+<div class="match-header">
+    <h1>Dragonflies vs <input type="text" class="detail-input" id="match-opp" onchange="saveMeta()" placeholder="Opponent"></h1>
+    <div class="match-details">
+        <input type="text" class="detail-input" id="match-date" onchange="saveMeta()" placeholder="Date"> | 
+        <input type="text" class="detail-input" id="match-field" onchange="saveMeta()" placeholder="Field #"> | 
+        <input type="text" class="detail-input" id="match-time" onchange="saveMeta()" placeholder="Time">
+    </div>
+</div>
+
+<div class="half-selector">
+    <button id="btn-h1" class="btn-nav active" onclick="switchHalf(1)">1st Half</button>
+    <button id="btn-h2" class="btn-nav" onclick="switchHalf(2)">2nd Half</button>
+    <button id="btn-copy" class="btn-util" style="display:none;" onclick="copyH1ToH2()">Copy H1</button>
+    <button class="btn-util btn-summary-toggle" onclick="toggleSummary()">Summary</button>
+    <button class="btn-util" style="background:var(--pitch-green)" onclick="exportToImage()">Export Image</button>
+</div>
+
+<div class="timer-row">
+    <div class="timer-box"><span class="timer-label">Match</span><div id="match-timer">20:00</div></div>
+    <div class="timer-box"><span class="timer-label">Sub</span><div id="sub-timer">05:00</div></div>
+    <button class="btn-pause-main" id="timer-ctrl" onclick="toggleTimers()">START</button>
+    <div style="flex: 0 0 25%;"></div>
+</div>
+
+<div class="section-container header-controls hide-in-summary">
+    <div class="control-item">
+        <label>Players (CSV)</label>
+        <textarea id="player-names" rows="2" oninput="syncSquadAndSlots()">Isla, Ella, Indie, Florence, Flossie, Millie, Sophia, Effie, Olivia, Ruby, Zoe</textarea>
+    </div>
+    <div class="control-row">
+        <div class="control-item"><label>Mins</label><input type="number" id="duration" value="20" onchange="forceRefresh()"></div>
+        <div class="control-item"><label>Squad</label><input type="number" id="total-squad" value="11" readonly></div>
+        <div class="control-item"><label>Sub Slots</label><input type="number" id="rotation-count" value="4" onchange="forceRefresh()"></div>
+    </div>
+    <div class="btn-group">
+        <button class="btn-action" style="background:var(--accent-green)" onclick="forceRefresh()">Update Pitch</button>
+        <button class="btn-action" style="background:#d32f2f" onclick="confirmReset()">Reset Match</button>
+    </div>
+</div>
+
+<div class="section-container hide-in-summary">
+    <span id="target-stmt" class="target-stmt">Target Outs: Loading...</span>
+    <div id="minute-list"></div>
+</div>
+
+<div class="section-container hide-in-summary"><h3>Bench</h3><div id="bench"></div></div>
+
+<div id="export-area">
+    <div id="static-export-header">
+        <h2 id="exp-title">Dragonflies vs Opponent</h2>
+        <p id="exp-details">Date | Field | Time | Half</p>
+    </div>
+
+    <div class="field-viewport">
+        <div class="field-container" id="soccer-field">
+            <div class="line" style="width:100%; top:50%; border-top:1.5px solid rgba(255,255,255,0.5)"></div>
+            <div class="line" style="width:100px; height:100px; border-radius:50%; top:50%; left:50%; transform:translate(-50%,-50%); border:1.5px solid rgba(255,255,255,0.5)"></div>
+        </div>
+    </div>
+    <div class="section-container">
+        <h3>Player Rotation Chain</h3>
+        <div id="chain-grid-content"></div>
+    </div>
+    <div class="section-container">
+        <h3>Substitution Flow Table</h3>
+        <div id="sub-flow-content"></div>
+    </div>
+</div>
+
+<script>
+    const posList = ["LF", "RF", "S", "CM", "LB", "RB"];
+    let currentHalf = 1;
+    let matchSecs, subSecs, timerObj = null;
+
+    function toggleSummary() { document.body.classList.toggle('summary-active'); }
+
+    // --- ENHANCED EXPORT LOGIC: Header Inclusion ---
+    function exportToImage() {
+        const area = document.getElementById('export-area');
+        const opp = document.getElementById('match-opp').value || 'Match';
+        const date = document.getElementById('match-date').value || '---';
+        const field = document.getElementById('match-field').value || '---';
+        const time = document.getElementById('match-time').value || '---';
+        const halfText = currentHalf === 1 ? '1st Half' : '2nd Half';
+        
+        // Update the static header for the snapshot
+        document.getElementById('exp-title').innerText = `Dragonflies vs ${opp}`;
+        document.getElementById('exp-details').innerText = `${date} | Field: ${field} | Time: ${time} | ${halfText}`;
+
+        area.classList.add('exporting');
+        
+        html2canvas(area, { scale: 2, useCORS: true, backgroundColor: "#ffffff" }).then(canvas => {
+            const link = document.createElement('a');
+            link.download = `Dragonflies_vs_${opp}_${currentHalf === 1 ? 'H1' : 'H2'}.png`;
+            link.href = canvas.toDataURL("image/png");
+            link.click();
+            area.classList.remove('exporting');
+        });
+    }
+
+    function syncSquadAndSlots() {
+        const names = document.getElementById('player-names').value.split(',').map(n => n.trim()).filter(n => n);
+        document.getElementById('total-squad').value = names.length;
+        const p = names.length - 1;
+        let s = (p === 7) ? 7 : (p === 8) ? 4 : (p === 9) ? 3 : (p >= 10) ? 5 : 4;
+        document.getElementById('rotation-count').value = s;
+        forceRefresh();
+    }
+
+    function forceRefresh() { renderBench(); renderField(); updateNumbers(); resetTimerDisplay(); saveState(); }
+
+    function renderBench() {
+        const b = document.getElementById('bench'); if (!b) return;
+        const names = document.getElementById('player-names').value.split(',').map(n => n.trim()).filter(n => n);
+        b.innerHTML = '';
+        names.forEach(n => {
+            const div = document.createElement('div');
+            div.className = 'player-tag'; div.draggable = true; div.innerText = n;
+            div.onmousedown = () => document.activeElement.blur();
+            div.ontouchstart = () => document.activeElement.blur();
+            div.ondragstart = (e) => { document.activeElement.blur(); e.dataTransfer.setData("text", n); };
+            b.appendChild(div);
+        });
+    }
+
+    function renderField() {
+        const field = document.getElementById('soccer-field'); if (!field) return;
+        const rot = rotations(); const dur = parseInt(document.getElementById('duration').value) || 20; const interval = dur / rot;
+        document.querySelectorAll('.pos-cluster').forEach(c => c.remove());
+        posList.forEach(pos => {
+            const cluster = document.createElement('div'); cluster.className = 'pos-cluster'; cluster.id = `cluster-${pos}`;
+            cluster.innerHTML = `<div class="pos-label">${pos}</div>`;
+            for (let i = 0; i < rot; i++) {
+                const slot = document.createElement('div'); slot.className = 'sub-slot'; slot.dataset.idx = i;
+                slot.innerHTML = `<small>${Math.round(i * interval)}m</small>`;
+                slot.ondragover = (e) => e.preventDefault(); slot.ondrop = onDrop;
+                cluster.appendChild(slot);
+            }
+            field.appendChild(cluster);
+        });
+        const gk = document.createElement('div'); gk.className = 'pos-cluster'; gk.id = 'cluster-GK';
+        gk.innerHTML = `<div class="pos-label">GK</div><div class="sub-slot" style="min-height:45px;" ondragover="event.preventDefault()" ondrop="onDrop(event)"><small>Full</small></div>`;
+        field.appendChild(gk);
+        loadAssignments();
+    }
+
+    function onDrop(e) {
+        e.preventDefault(); const name = e.dataTransfer.getData("text");
+        let target = e.target; if (target.classList.contains('player-tag')) target = target.parentNode;
+        if (target.classList.contains('sub-slot')) {
+            target.innerHTML = `<small>${target.querySelector('small').innerText}</small><div class="player-tag">${name}<div class="remove-btn" onclick="clearSlot(this)">×</div></div>`;
+            updateNumbers(); saveState();
+        }
+    }
+
+    function clearSlot(btn) {
+        const slot = btn.parentNode.parentNode; slot.innerHTML = `<small>${slot.querySelector('small').innerText}</small>`;
+        updateNumbers(); saveState();
+    }
+
+    function updateNumbers() {
+        const dur = parseInt(document.getElementById('duration').value) || 20;
+        const rot = rotations(); const activeNames = document.getElementById('player-names').value.split(',').map(n => n.trim()).filter(n => n);
+        const interval = dur / rot; const h1Mins = {}; const h2Mins = {};
+        const gkTag = document.querySelector('#cluster-GK .player-tag');
+        const activeGK = gkTag ? gkTag.innerText.replace('×','').trim() : null;
+        if (gkTag) gkTag.classList.remove('conflict');
+
+        for(let i=0; i<rot; i++) {
+            const seen = {};
+            document.querySelectorAll(`.sub-slot[data-idx="${i}"]`).forEach(slot => {
+                const tag = slot.querySelector('.player-tag');
+                if(tag) {
+                    const name = tag.innerText.replace('×','').trim();
+                    if(currentHalf === 1) h1Mins[name] = (h1Mins[name] || 0) + interval; else h2Mins[name] = (h2Mins[name] || 0) + interval;
+                    tag.classList.remove('conflict');
+                    if(seen[name] || name === activeGK) { tag.classList.add('conflict'); if(seen[name]) seen[name].classList.add('conflict'); if(name === activeGK) gkTag.classList.add('conflict'); }
+                    seen[name] = tag;
+                }
+            });
+        }
+        if(gkTag && activeGK) { if(currentHalf === 1) h1Mins[activeGK] = dur; else h2Mins[activeGK] = dur; }
+
+        const saved = JSON.parse(localStorage.getItem('dragonMatchV11_4') || '{}');
+        const otherHalf = currentHalf === 1 ? 'half2' : 'half1';
+        let otherGK = null;
+
+        if(saved[otherHalf]) {
+            const oDur = parseInt(saved[otherHalf].dur) || dur; const oRot = parseInt(saved[otherHalf].rot) || 1; const oInt = oDur / oRot;
+            Object.entries(saved[otherHalf].assign || {}).forEach(([k, name]) => {
+                if (k.includes('GK')) otherGK = name;
+                const targetDict = (currentHalf === 1) ? h2Mins : h1Mins;
+                targetDict[name] = (targetDict[name] || 0) + (k.includes('GK') ? oDur : oInt);
+            });
+        }
+
+        const h1GkName = (currentHalf === 1 ? activeGK : otherGK); const h2GkName = (currentHalf === 2 ? activeGK : otherGK);
+        const h1Len = (saved.half1?.names ? saved.half1.names.split(',').filter(x=>x.trim()).length : activeNames.length);
+        const h2Len = (saved.half2?.names ? saved.half2.names.split(',').filter(x=>x.trim()).length : activeNames.length);
+        const t1_sub = ( (parseInt(saved.half1?.dur)||dur) * 6) / (h1Len - 1 || 1);
+        const t2_sub = ( (parseInt(saved.half2?.dur)||dur) * 6) / (h2Len - 1 || 1);
+        document.getElementById('target-stmt').innerText = `Target Outs: H1(${t1_sub.toFixed(1)}m) | H2(${t2_sub.toFixed(1)}m)`;
+
+        const allNamesRaw = [...activeNames, ...(saved.half1?.names?.split(',') || []), ...(saved.half2?.names?.split(',') || [])];
+        const allNames = Array.from(new Set(allNamesRaw.map(n => n.trim()).filter(n => n))).sort();
+
+        let html = "";
+        allNames.forEach(n => {
+            const m1 = h1Mins[n] || 0, m2 = h2Mins[n] || 0, tot = m1 + m2;
+            const isAbsent = !activeNames.includes(n);
+            const targetH1 = (n === h1GkName) ? (parseInt(saved.half1?.dur)||dur) : t1_sub;
+            const targetH2 = (n === h2GkName) ? (parseInt(saved.half2?.dur)||dur) : t2_sub;
+            const h1C = (Math.abs(m1 - targetH1) < 0.5) ? "black" : "red";
+            const h2C = (Math.abs(m2 - targetH2) < 0.5) ? "blue" : "red";
+            const rowC = (Math.abs(tot - (targetH1 + targetH2)) < 1.5) ? "inherit" : "red";
+
+            html += `<div class="stat-box ${isAbsent ? 'absent-player' : ''}" style="color:${rowC}">
+                <span class="stat-name">${n}</span>
+                <span>
+                    <span style="color:${h1C}">H1:${m1.toFixed(0)}${n===h1GkName?'(GK)':''}</span> | 
+                    <span style="color:${h2C}">H2:${m2.toFixed(0)}${n===h2GkName?'(GK)':''}</span> | 
+                    <b>T:${tot.toFixed(0)}</b>
+                </span>
+            </div>`;
+        });
+        document.getElementById('minute-list').innerHTML = html;
+        renderSubFlow(interval, rot); renderChain(activeNames, rot, interval);
+    }
+
+    function renderSubFlow(interval, rot) {
+        let slots = Array.from({length: rot}, () => ({}));
+        document.querySelectorAll('.sub-slot[data-idx]').forEach(s => {
+            const tag = s.querySelector('.player-tag'); if(tag) slots[s.dataset.idx][s.parentNode.id.replace('cluster-','')] = tag.innerText.replace('×','').trim();
+        });
+        let html = `<table class="data-table"><tr><th>Time</th><th>Details</th></tr>`;
+        for(let i=1; i<rot; i++) {
+            let changes = [];
+            posList.forEach(p => {
+                const inc = slots[i][p], out = slots[i-1][p]; if(inc !== out) changes.push(`<div class="change-pill"><b>${p}:</b> ${inc || '?'} ➔ ${out || '?'}</div>`);
+            });
+            html += `<tr><td>${Math.round(i*interval)}m</td><td>${changes.join('') || 'None'}</td></tr>`;
+        }
+        document.getElementById('sub-flow-content').innerHTML = html + "</table>";
+    }
+
+    function renderChain(names, rot, interval) {
+        let onField0 = []; document.querySelectorAll('.sub-slot[data-idx="0"]').forEach(s => { const tag = s.querySelector('.player-tag'); if(tag) onField0.push(tag.innerText.replace('×','').trim()); });
+        const gkTag = document.querySelector('#cluster-GK .player-tag'); const starters = names.filter(n => !onField0.includes(n) && n !== (gkTag ? gkTag.innerText.replace('×','').trim() : null));
+        let html = `<table class="data-table"><tr><th>Start</th>`;
+        for(let i=1; i<rotations(); i++) html += `<th>Sub ${i} (${Math.round(i*interval)}m)</th>`;
+        html += `</tr>`;
+        starters.forEach(s => {
+            html += `<tr><td><b>${s}</b></td>`; let curr = s;
+            for(let i=1; i<rotations(); i++) {
+                let found = "---";
+                document.querySelectorAll(`.sub-slot[data-idx="${i}"]`).forEach(slot => {
+                    const tag = slot.querySelector('.player-tag');
+                    if (tag && tag.innerText.replace('×','').trim() === curr) {
+                        const pos = slot.parentNode.id.replace('cluster-',''); const prev = document.querySelector(`#${slot.parentNode.id} .sub-slot[data-idx="${i-1}"] .player-tag`);
+                        if(prev) { const prevN = prev.innerText.replace('×','').trim(); found = `➔ ${prevN} (${pos})`; curr = prevN; }
+                    }
+                });
+                html += `<td>${found}</td>`;
+            }
+            html += `</tr>`;
+        });
+        document.getElementById('chain-grid-content').innerHTML = html + "</table>";
+    }
+
+    function rotations() { return parseInt(document.getElementById('rotation-count').value) || 1; }
+    function switchHalf(h, skipSave = false) {
+        if (!skipSave && matchSecs !== undefined) saveState();
+        currentHalf = h; document.getElementById('btn-h1').classList.toggle('active', h === 1); document.getElementById('btn-h2').classList.toggle('active', h === 2); document.getElementById('btn-copy').style.display = (h === 2) ? 'inline-block' : 'none';
+        const saved = JSON.parse(localStorage.getItem('dragonMatchV11_4') || '{}'); const hData = saved[`half${h}`];
+        if (hData) {
+            document.getElementById('player-names').value = hData.names || "Isla, Ella, Indie, Florence, Flossie, Millie, Sophia, Effie, Olivia, Ruby, Zoe";
+            document.getElementById('duration').value = hData.dur || 20; document.getElementById('rotation-count').value = hData.rot || 4;
+            document.getElementById('total-squad').value = hData.names.split(',').filter(x=>x.trim()).length;
+        }
+        renderBench(); renderField(); updateNumbers(); resetTimerDisplay();
+    }
+    function copyH1ToH2() { saveState(); const saved = JSON.parse(localStorage.getItem('dragonMatchV11_4') || '{}'); if(saved.half1) { saved.half2 = JSON.parse(JSON.stringify(saved.half1)); localStorage.setItem('dragonMatchV11_4', JSON.stringify(saved)); switchHalf(2, true); } }
+    function saveState() {
+        const raw = localStorage.getItem('dragonMatchV11_4'); let state = raw ? JSON.parse(raw) : {"half1":{}, "half2":{}}; const key = `half${currentHalf}`;
+        state[key].names = document.getElementById('player-names').value; state[key].dur = document.getElementById('duration').value; state[key].rot = document.getElementById('rotation-count').value; state[key].assign = {};
+        document.querySelectorAll('.sub-slot').forEach(s => { const tag = s.querySelector('.player-tag'); if(tag) state[key].assign[`${s.parentNode.id}_${s.dataset.idx || 'GK'}`] = tag.innerText.replace('×','').trim(); });
+        localStorage.setItem('dragonMatchV11_4', JSON.stringify(state));
+    }
+    function loadAssignments() {
+        const saved = JSON.parse(localStorage.getItem('dragonMatchV11_4') || '{}'); const hData = saved[`half${currentHalf}`];
+        if(hData && hData.assign) { Object.entries(hData.assign).forEach(([k, v]) => { const parts = k.split('_'); const cluster = document.getElementById(parts[0]); if(cluster) { const slot = (parts[1] === 'GK') ? cluster.querySelector('.sub-slot') : cluster.querySelector(`.sub-slot[data-idx="${parts[1]}"]`); if(slot) slot.innerHTML = `<small>${slot.querySelector('small').innerText}</small><div class="player-tag">${v}<div class="remove-btn" onclick="clearSlot(this)">×</div></div>`; } }); }
+    }
+    function saveMeta() { localStorage.setItem('dragonMeta', JSON.stringify({ opp: document.getElementById('match-opp').value, date: document.getElementById('match-date').value, field: document.getElementById('match-field').value, time: document.getElementById('match-time').value })); }
+    function resetTimerDisplay() { if(timerObj) return; const dur = parseInt(document.getElementById('duration').value) || 20; const rot = rotations(); matchSecs = dur * 60; subSecs = (dur * 60) / rot; updateTimerText(); }
+    function updateTimerText() { const fmt = (s) => `${Math.floor(Math.max(0,s)/60).toString().padStart(2,'0')}:${Math.floor(Math.max(0,s)%60).toString().padStart(2,'0')}`; document.getElementById('match-timer').innerText = fmt(matchSecs); document.getElementById('sub-timer').innerText = fmt(subSecs); }
+    function toggleTimers() {
+        if(timerObj) { clearInterval(timerObj); timerObj = null; document.getElementById('timer-ctrl').innerText = "RESUME"; } else {
+            timerObj = setInterval(() => {
+                matchSecs--; subSecs--;
+                if(subSecs <= 0) { if(navigator.vibrate) navigator.vibrate(5000); subSecs = (parseInt(document.getElementById('duration').value)*60)/rotations(); }
+                if(matchSecs <= 0) clearInterval(timerObj); updateTimerText();
+            }, 1000); document.getElementById('timer-ctrl').innerText = "PAUSE";
+        }
+    }
+    function handleAutoScroll(e) { if(e.clientY < 80) window.scrollBy(0, -15); else if(window.innerHeight - e.clientY < 80) window.scrollBy(0, 15); }
+    function confirmReset() { if(confirm("Full Reset?")) { localStorage.clear(); location.reload(); } }
+
+    window.onload = () => {
+        const rawM = localStorage.getItem('dragonMeta'); const m = rawM ? JSON.parse(rawM) : {};
+        document.getElementById('match-opp').value = m.opp || ''; document.getElementById('match-date').value = m.date || '';
+        document.getElementById('match-field').value = m.field || ''; document.getElementById('match-time').value = m.time || '';
+        switchHalf(1, true);
+    };
+</script>
+</body>
+</html>
