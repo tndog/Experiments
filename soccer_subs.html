@@ -136,7 +136,7 @@
     <div id="minute-list"></div>
 </div>
 
-<div class="section-container hide-in-summary"><h3>Bench</h3><div id="bench"></div></div>
+<div class="section-container hide-in-summary"><h3>Players</h3><div id="bench"></div></div>
 
 <div id="export-area">
     <div id="static-export-header">
@@ -151,11 +151,11 @@
         </div>
     </div>
     <div class="section-container">
-        <h3>Player Rotation Chain</h3>
+        <h3>Subs - Player Rotations</h3>
         <div id="chain-grid-content"></div>
     </div>
     <div class="section-container">
-        <h3>Substitution Flow Table</h3>
+        <h3>Subs - By Position</h3>
         <div id="sub-flow-content"></div>
     </div>
 </div>
@@ -339,7 +339,7 @@
     function renderChain(names, rot, interval) {
         let onField0 = []; document.querySelectorAll('.sub-slot[data-idx="0"]').forEach(s => { const tag = s.querySelector('.player-tag'); if(tag) onField0.push(tag.innerText.replace('×','').trim()); });
         const gkTag = document.querySelector('#cluster-GK .player-tag'); const starters = names.filter(n => !onField0.includes(n) && n !== (gkTag ? gkTag.innerText.replace('×','').trim() : null));
-        let html = `<table class="data-table"><tr><th>Start</th>`;
+        let html = `<table class="data-table"><tr><th>Start Off</th>`;
         for(let i=1; i<rotations(); i++) html += `<th>Sub ${i} (${Math.round(i*interval)}m)</th>`;
         html += `</tr>`;
         starters.forEach(s => {
